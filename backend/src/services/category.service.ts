@@ -8,47 +8,51 @@ import {User} from "../interfaces/user.interface";
 @Service()
 export class CategoryService {
     public async createCategory(categoryData: Category): Promise<Category> {
-        const findUser: User = await prisma.user.findFirst({where: {id: categoryData.userId}});
-        if (!findUser) {
-            throw new HttpException(409, "User not found");
-        }
-
-        const createdCategory: Category = await prisma.category.create({
-            data: {
-                name: categoryData.name,
-                userId: categoryData.userId,
-                icon: categoryData.icon,
-                color: categoryData.color,
-                isEditable: categoryData.isEditable
+        try {
+            const findUser: User = await prisma.user.findFirst({where: {id: categoryData.userId}});
+            if (!findUser) {
+                throw new HttpException(404, "User not found");
             }
-        });
-
-        if (!createdCategory) {
-            throw new HttpException(409, "Category not created");
-        }
-
-        await prisma.user.update({
-            where: {id: categoryData.userId},
-            data: {
-                categories: {
-                    connect: {
-                        id: createdCategory.id
+    
+            const createdCategory: Category = await prisma.category.create({
+                data: {
+                    name: categoryData.name,
+                    userId: categoryData.userId,
+                    icon: categoryData.icon,
+                    color: categoryData.color,
+                    isEditable: categoryData.isEditable
+                }
+            });
+    
+            if (!createdCategory) {
+                throw new HttpException(500, "Category not created");
+            }
+    
+            await prisma.user.update({
+                where: {id: categoryData.userId},
+                data: {
+                    categories: {
+                        connect: {
+                            id: createdCategory.id
+                        }
                     }
                 }
-            }
-        });
-
-        return createdCategory;
-    }
+            });
+    
+            return createdCategory;
+        } catch (error) {
+            throw new HttpException(500, "Internal server error");
+        }
+    }    
 
     public async updateCategory(categoryId: string, categoryData: Category, userId: string): Promise<Category> {
         const findCategory: Category = await prisma.category.findFirst({where: {id: categoryId}});
         if (!findCategory) {
-            throw new HttpException(409, "Category not found");
+            throw new HttpException(404, "Category not found");
         }
 
         if (findCategory.userId.toString() !== userId) {
-            throw new HttpException(409, "Unauthorized");
+            throw new HttpException(401, "Unauthorized");
         }
 
         const updatedCategory: Category = await prisma.category.update({
@@ -62,7 +66,7 @@ export class CategoryService {
         });
 
         if (!updatedCategory) {
-            throw new HttpException(409, "Category not updated");
+            throw new HttpException(500, "Category not updated");
         }
 
         return updatedCategory;
@@ -71,11 +75,11 @@ export class CategoryService {
     public async deleteCategory(categoryId: string, userId: string): Promise<string> {
         const findCategory: Category = await prisma.category.findFirst({where: {id: categoryId}});
         if (!findCategory) {
-            throw new HttpException(409, "Category not found");
+            throw new HttpException(404, "Category not found");
         }
 
         if (findCategory.userId.toString() !== userId) {
-            throw new HttpException(409, "Unauthorized");
+            throw new HttpException(401, "Unauthorized");
         }
 
         const deletedCategory: Category = await prisma.category.delete({
@@ -83,7 +87,7 @@ export class CategoryService {
         });
 
         if (!deletedCategory) {
-            throw new HttpException(409, "Category not deleted");
+            throw new HttpException(500, "Category not deleted");
         }
 
         return "Category deleted";
@@ -92,7 +96,7 @@ export class CategoryService {
     public async getCategories(userId: string): Promise<Category[]> {
         const findUser: User = await prisma.user.findFirst({where: {id: userId}});
         if (!findUser) {
-            throw new HttpException(409, "User not found");
+            throw new HttpException(404, "User not found");
         }
 
         const categories: Category[] = await prisma.category.findMany({where: {userId: userId}});
@@ -106,11 +110,11 @@ export class CategoryService {
             include: {tasks: true}
         });
         if (!findCategory) {
-            throw new HttpException(409, "Category not found");
+            throw new HttpException(404, "Category not found");
         }
 
         if (findCategory.userId.toString() !== userId) {
-            throw new HttpException(409, "Unauthorized");
+            throw new HttpException(401, "Unauthorized");
         }
 
         return findCategory;

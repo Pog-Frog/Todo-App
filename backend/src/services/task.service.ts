@@ -9,70 +9,76 @@ import {Task} from "../interfaces/task.interface";
 @Service()
 export class TaskService {
     public async createTask(taskData: Task): Promise<Task> {
-        const findUser: User = await prisma.user.findFirst({where: {id: taskData.userId}});
-        if (!findUser) {
-            throw new HttpException(409, "User not found");
-        }
-
-        if (taskData.categoryId) {
-            const findCategory: Category = await prisma.category.findFirst({where: {id: taskData.categoryId}});
-            if (!findCategory) {
-                throw new HttpException(409, "Category not found");
+        try {
+            const findUser: User = await prisma.user.findFirst({where: {id: taskData.userId}});
+            if (!findUser) {
+                throw new HttpException(404, "User not found");
             }
-        }
-
-        const createdTask: Task = await prisma.task.create({
-            data: {
-                title: taskData.title,
-                description: taskData.description,
-                isCompleted: taskData.isCompleted,
-                categoryId: taskData.categoryId,
-                userId: taskData.userId
-            }
-        });
-
-        if (!createdTask) {
-            throw new HttpException(409, "Task not created");
-        }
-
-        await prisma.category.update({
-            where: {id: taskData.categoryId},
-            data: {
-                tasks: {
-                    connect: {
-                        id: createdTask.id
-                    }
+    
+            if (taskData.categoryId) {
+                const findCategory: Category = await prisma.category.findFirst({where: {id: taskData.categoryId}});
+                if (!findCategory) {
+                    throw new HttpException(404, "Category not found");
                 }
             }
-        });
-
-        await prisma.user.update({
-            where: {id: taskData.userId},
-            data: {
-                tasks: {
-                    connect: {
-                        id: createdTask.id
-                    }
+    
+            const createdTask: Task = await prisma.task.create({
+                data: {
+                    title: taskData.title,
+                    description: taskData.description,
+                    isCompleted: taskData.isCompleted,
+                    categoryId: taskData.categoryId,
+                    userId: taskData.userId
                 }
+            });
+    
+            if (!createdTask) {
+                throw new HttpException(500, "Task not created");
             }
-        });
-
-        return createdTask;
+    
+            await prisma.$transaction([
+                prisma.category.update({
+                    where: {id: taskData.categoryId},
+                    data: {
+                        tasks: {
+                            connect: {
+                                id: createdTask.id
+                            }
+                        }
+                    }
+                }),
+                prisma.user.update({
+                    where: {id: taskData.userId},
+                    data: {
+                        tasks: {
+                            connect: {
+                                id: createdTask.id
+                            }
+                        }
+                    }
+                })
+            ]);
+    
+            return createdTask;
+        } catch (error) {
+            throw new HttpException(500, "Internal server error");
+        }
     }
+        
 
     public async updateTask(taskData: Task, userId: string): Promise<Task> {
         const findTask: Task = await prisma.task.findFirst({where: {id: taskData.id}});
         if (!findTask) {
-            throw new HttpException(409, "Task not found");
+            throw new HttpException(404, "Task not found");
         }
 
         const findCategory: Category = await prisma.category.findFirst({where: {id: findTask.categoryId}});
         if (!findCategory) {
-            throw new HttpException(409, "Category not found");
+            throw new HttpException(404, "Category not found");
         }
 
         if (findCategory.userId.toString() !== userId || findTask.userId.toString() !== userId) {
-            throw new HttpException(409, "Unauthorized");
+            throw new HttpException(401, "Unauthorized");
         }
 
         const updatedTask: Task = await prisma.task.update({
@@ -86,7 +92,7 @@ export class TaskService {
         });
 
         if (!updatedTask) {
-            throw new HttpException(409, "Task not updated");
+            throw new HttpException(500, "Task not updated");
         }
 
         return updatedTask;
@@ -95,16 +101,16 @@ export class TaskService {
     public async deleteTask(taskId: string, userId: string): Promise<string> {
         const findTask: Task = await prisma.task.findFirst({where: {id: taskId}});
         if (!findTask) {
-            throw new HttpException(409, "Task not found");
+            throw new HttpException(404, "Task not found");
         }
 
         const findCategory: Category = await prisma.category.findFirst({where: {id: findTask.categoryId}});
         if (!findCategory) {
-            throw new HttpException(409, "Category not found");
+            throw new HttpException(404, "Category not found");
         }
 
         if (findCategory.userId.toString() !== userId || findTask.userId.toString() !== userId) {
-            throw new HttpException(409, "Unauthorized");
+            throw new HttpException(401, "Unauthorized");
         }
 
         const deletedTask: Task = await prisma.task.delete({
@@ -112,7 +118,7 @@ export class TaskService {
         });
 
         if (!deletedTask) {
-            throw new HttpException(409, "Task not deleted");
+            throw new HttpException(500, "Task not deleted");
         }
 
         return "Task deleted";
@@ -121,7 +127,7 @@ export class TaskService {
     public async getTasks(userId: string): Promise<Task[]> {
         const findUser: User = await prisma.user.findFirst({where: {id: userId}});
         if (!findUser) {
-            throw new HttpException(409, "User not found");
+            throw new HttpException(404, "User not found");
         }
 
         const tasks: Task[] = await prisma.task.findMany({where: {userId: userId}});
@@ -133,11 +139,11 @@ export class TaskService {
     public async getTask(taskId: string, userId: string): Promise<Task> {
         const findTask: Task = await prisma.task.findFirst({where: {id: taskId}, include: {category: true}});
         if (!findTask) {
-            throw new HttpException(409, "Task not found");
+            throw new HttpException(404, "Task not found");
         }
 
         if (findTask.userId.toString() !== userId) {
-            throw new HttpException(409, "Unauthorized");
+            throw new HttpException(401, "Unauthorized");
         }
 
         return findTask;

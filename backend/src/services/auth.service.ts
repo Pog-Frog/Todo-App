@@ -46,18 +46,22 @@ export class AuthService {
             }
         });
 
+        if (!createdUser) {
+            throw new HttpException(500, "User not created");
+        }
+
         return createdUser;
     }
 
     public async login(userData: User): Promise<{ findUser: User; cookie: string; tokenData: TokenData }> {
         const findUser = await prisma.user.findFirst({where: {email: userData.email}});
         if (!findUser) {
-            throw new HttpException(409, "The email you entered doesn't belong to an account.");
+            throw new HttpException(404, "The email you entered doesn't belong to an account.");
         }
 
         const isPasswordMatching: boolean = await compare(userData.password, findUser.hashedPassword);
         if (!isPasswordMatching) {
-            throw new HttpException(409, 'Invalid email or password');
+            throw new HttpException(404, 'Invalid email or password');
         }
 
         const tokenData = createToken(findUser);
@@ -69,7 +73,7 @@ export class AuthService {
     public async logout(userData: User) {
         const findUser = await prisma.user.findFirst({where: {email: userData.email}});
         if (!findUser) {
-            throw new HttpException(409, "The email you entered doesn't belong to an account.");
+            throw new HttpException(404, "The email you entered doesn't belong to an account.");
         }
 
         return "Logged out successfully";
