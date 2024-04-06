@@ -1,0 +1,37 @@
+# Find All categories for the current user
+GET http://localhost:8080/api/categories
+
+###
+
+# Find a category by id
+GET http://localhost:8080/api/categories/661136410f76536aa2e6382f
+
+###
+
+#Create Category
+POST http://localhost:8080/api/categories
+Content-Type: application/json
+
+{
+    "name": "Category 1",
+    "userId": "661136410f76536aa2e6382f",
+    "icon": "icon",
+    "color": "color"
+}
+
+###
+
+#Delete Category by id
+DELETE http://localhost:8080/api/categories/66113fdb7cfc3cc89457bb52
+
+###
+
+#Update Category by id
+PUT http://localhost:8080/api/categories/661136710f76536aa2e63830
+Content-Type: application/json
+
+{
+    "name": "Category 2"
+}
+
+###
