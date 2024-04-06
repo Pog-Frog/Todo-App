@@ -9,60 +9,56 @@ import {Task} from "../interfaces/task.interface";
 @Service()
 export class TaskService {
     public async createTask(taskData: Task): Promise<Task> {
-        try {
-            const findUser: User = await prisma.user.findFirst({where: {id: taskData.userId}});
-            if (!findUser) {
-                throw new HttpException(404, "User not found");
-            }
-    
-            if (taskData.categoryId) {
-                const findCategory: Category = await prisma.category.findFirst({where: {id: taskData.categoryId}});
-                if (!findCategory) {
-                    throw new HttpException(404, "Category not found");
-                }
-            }
-    
-            const createdTask: Task = await prisma.task.create({
-                data: {
-                    title: taskData.title,
-                    description: taskData.description,
-                    isCompleted: taskData.isCompleted,
-                    categoryId: taskData.categoryId,
-                    userId: taskData.userId
-                }
-            });
-    
-            if (!createdTask) {
-                throw new HttpException(500, "Task not created");
-            }
-    
-            await prisma.$transaction([
-                prisma.category.update({
-                    where: {id: taskData.categoryId},
-                    data: {
-                        tasks: {
-                            connect: {
-                                id: createdTask.id
-                            }
-                        }
-                    }
-                }),
-                prisma.user.update({
-                    where: {id: taskData.userId},
-                    data: {
-                        tasks: {
-                            connect: {
-                                id: createdTask.id
-                            }
-                        }
-                    }
-                })
-            ]);
-    
-            return createdTask;
-        } catch (error) {
-            throw new HttpException(500, "Internal server error");
+        const findUser: User = await prisma.user.findFirst({where: {id: taskData.userId}});
+        if (!findUser) {
+            throw new HttpException(404, "User not found");
         }
+
+        if (taskData.categoryId) {
+            const findCategory: Category = await prisma.category.findFirst({where: {id: taskData.categoryId}});
+            if (!findCategory) {
+                throw new HttpException(404, "Category not found");
+            }
+        }
+
+        const createdTask: Task = await prisma.task.create({
+            data: {
+                title: taskData.title,
+                description: taskData.description,
+                isCompleted: taskData.isCompleted,
+                categoryId: taskData.categoryId,
+                userId: taskData.userId
+            }
+        });
+
+        if (!createdTask) {
+            throw new HttpException(500, "Task not created");
+        }
+
+        await prisma.$transaction([
+            prisma.category.update({
+                where: {id: taskData.categoryId},
+                data: {
+                    tasks: {
+                        connect: {
+                            id: createdTask.id
+                        }
+                    }
+                }
+            }),
+            prisma.user.update({
+                where: {id: taskData.userId},
+                data: {
+                    tasks: {
+                        connect: {
+                            id: createdTask.id
+                        }
+                    }
+                }
+            })
+        ]);
+
+        return createdTask;
     }
         
 

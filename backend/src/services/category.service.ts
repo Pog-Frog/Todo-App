@@ -8,41 +8,37 @@ import {User} from "../interfaces/user.interface";
 @Service()
 export class CategoryService {
     public async createCategory(categoryData: Category): Promise<Category> {
-        try {
-            const findUser: User = await prisma.user.findFirst({where: {id: categoryData.userId}});
-            if (!findUser) {
-                throw new HttpException(404, "User not found");
+        const findUser: User = await prisma.user.findFirst({where: {id: categoryData.userId}});
+        if (!findUser) {
+            throw new HttpException(404, "User not found");
+        }
+
+        const createdCategory: Category = await prisma.category.create({
+            data: {
+                name: categoryData.name,
+                userId: categoryData.userId,
+                icon: categoryData.icon,
+                color: categoryData.color,
+                isEditable: categoryData.isEditable
             }
-    
-            const createdCategory: Category = await prisma.category.create({
-                data: {
-                    name: categoryData.name,
-                    userId: categoryData.userId,
-                    icon: categoryData.icon,
-                    color: categoryData.color,
-                    isEditable: categoryData.isEditable
-                }
-            });
-    
-            if (!createdCategory) {
-                throw new HttpException(500, "Category not created");
-            }
-    
-            await prisma.user.update({
-                where: {id: categoryData.userId},
-                data: {
-                    categories: {
-                        connect: {
-                            id: createdCategory.id
-                        }
+        });
+
+        if (!createdCategory) {
+            throw new HttpException(500, "Category not created");
+        }
+
+        await prisma.user.update({
+            where: {id: categoryData.userId},
+            data: {
+                categories: {
+                    connect: {
+                        id: createdCategory.id
                     }
                 }
-            });
-    
-            return createdCategory;
-        } catch (error) {
-            throw new HttpException(500, "Internal server error");
-        }
+            }
+        });
+
+        return createdCategory;
     }    
 
     public async updateCategory(categoryId: string, categoryData: Category, userId: string): Promise<Category> {
