@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String  @id @default(auto()) @map("_id") @db.ObjectId
+  name           String?
+  email          String? @unique
+  hashedPassword String?
+
+  categories Category[]
+  tasks      Task[]
+}
+
+model Category {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  icon       String?
+  color      String?
+  userId     String   @db.ObjectId
+  isEditable Boolean? @default(true)
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks Task[]
+}
+
+model Task {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  isCompleted Boolean? @default(false)
+  categoryId  String   @db.ObjectId
+  userId      String   @db.ObjectId
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
