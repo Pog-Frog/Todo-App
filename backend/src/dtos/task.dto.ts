@@ -11,11 +11,11 @@ export class CreateTaskDto {
     description: string;
 
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     userId: string;
 
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     categoryId: string;
 
     @IsString()

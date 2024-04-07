@@ -37,9 +37,9 @@ model Task {
   title       String
   description String?
   isCompleted Boolean? @default(false)
-  categoryId  String   @db.ObjectId
+  categoryId  String?   @db.ObjectId
   userId      String   @db.ObjectId
 
-  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

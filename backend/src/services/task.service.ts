@@ -35,8 +35,8 @@ export class TaskService {
             throw new HttpException(500, "Task not created");
         }
 
-        await prisma.$transaction([
-            prisma.category.update({
+        if (taskData.categoryId) {
+            await prisma.category.update({
                 where: {id: taskData.categoryId},
                 data: {
                     tasks: {
@@ -45,18 +45,19 @@ export class TaskService {
                         }
                     }
                 }
-            }),
-            prisma.user.update({
-                where: {id: taskData.userId},
-                data: {
-                    tasks: {
-                        connect: {
-                            id: createdTask.id
-                        }
+            });
+        }
+
+        await prisma.user.update({
+            where: {id: taskData.userId},
+            data: {
+                tasks: {
+                    connect: {
+                        id: createdTask.id
                     }
                 }
-            })
-        ]);
+            }
+        });
 
         return createdTask;
     }
