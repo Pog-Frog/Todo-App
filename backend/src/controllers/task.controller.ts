@@ -35,13 +35,14 @@ export class TaskController {
     public updateTask = async (req: RequestWithUser, res: Response, next: NextFunction) => {
         try {
             const taskData: Task = req.body;
+            const taskId = req.params.taskId;
             const userId = await TokenUtils.getUserIDFromToken(req);
 
             if (!userId) {
                 throw new HttpException(409, "Invalid token");
             }
 
-            const updatedTask: Task = await this.taskService.updateTask(taskData, userId);
+            const updatedTask: Task = await this.taskService.updateTask(taskId, taskData, userId);
             res.status(200).json({data: updatedTask, message: "updated"});
 
         } catch (error) {
