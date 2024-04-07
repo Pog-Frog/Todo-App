@@ -101,13 +101,19 @@ export class TaskService {
             throw new HttpException(404, "Task not found");
         }
 
-        const findCategory: Category = await prisma.category.findFirst({where: {id: findTask.categoryId}});
-        if (!findCategory) {
-            throw new HttpException(404, "Category not found");
-        }
+        if (findTask.categoryId) {
+            const findCategory: Category = await prisma.category.findFirst({where: {id: findTask.categoryId}});
+            if (!findCategory) {
+                throw new HttpException(404, "Category not found");
+            }
 
-        if (findCategory.userId.toString() !== userId || findTask.userId.toString() !== userId) {
-            throw new HttpException(401, "Unauthorized");
+            if (findCategory.userId.toString() !== userId || findTask.userId.toString() !== userId) {
+                throw new HttpException(401, "Unauthorized");
+            }
+        } else {
+            if (findTask.userId.toString() !== userId) {
+                throw new HttpException(401, "Unauthorized");
+            }
         }
 
         const deletedTask: Task = await prisma.task.delete({
