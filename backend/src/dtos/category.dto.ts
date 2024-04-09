@@ -16,7 +16,7 @@ export class CreateCategoryDto {
     color: string;
 
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     userId: string;
 
     @IsBoolean()
