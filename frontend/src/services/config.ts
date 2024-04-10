@@ -1,5 +1,4 @@
 import axios from "axios";
-import * as SecureStore from "expo-secure-store";
 
 
 export const BASE_URL = "http://localhost:8080";
@@ -9,9 +8,9 @@ const axiosInstance = axios.create({
     timeout: 5000,
 })
 
-export const saveToken = async (key, value) => {
+export const saveToken = async (key: string, value: string) => {
     try {
-        await SecureStore.setItemAsync(key, value);
+        localStorage.setItem(key, value);
     } catch (error) {
         console.error(error);
     }
@@ -19,7 +18,7 @@ export const saveToken = async (key, value) => {
 
 axiosInstance.interceptors.request.use(async (req) => {
     try {
-        const token = await SecureStore.getItemAsync("user_token");
+        const token = localStorage.getItem("user_token");
         req.headers.Authorization = `Bearer ${token}`;
         return req;
     } catch (error) {

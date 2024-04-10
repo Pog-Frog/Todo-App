@@ -9,10 +9,6 @@ const Navigation = () => {
 
     const {user, updateUser} = useUserStore()
 
-    useEffect(() => {
-        updateUser(null)
-    }, [])
-
     return (
         <NavigationContainer>
             {user ? <AppStackNavigator/> : <AuthStackNavigator/>}

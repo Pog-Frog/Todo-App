@@ -24,7 +24,7 @@ export type CategoryStackParamList = {
     Categories: undefined,
     Category: {
         id: string
-    }
+    },
     CreateCategory: {
         id?: string
     }
@@ -52,3 +52,5 @@ export type AuthScreenNavigationType<RouteName extends keyof AuthStackParamList>
         NativeStackNavigationProp<AuthStackParamList, RouteName>,
         NativeStackNavigationProp<AppStackParamList, "Root">
     >
+
+export type CategoryNavigationType = NativeStackNavigationProp<CategoryStackParamList>
