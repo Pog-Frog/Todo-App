@@ -1,25 +1,26 @@
 import {Box, Text} from "../../utils/theme";
 import SafeAreaWrapper from "../../components/shared/safe-area-wrapper";
 import useSWR from "swr";
-import {fetcher} from "../../services/config";
+import axiosInstance, {fetcher} from "../../services/config";
 import Loading from "../../components/shared/loading";
-import {FlatList, Pressable} from "react-native";
-import {useNavigation} from "@react-navigation/native";
-import {CategoryNavigationType} from "../../navigation/types";
+import {FlatList} from "react-native";
+import CreateCategoryForm from "../../components/categories/create-new-category";
 
 
 const Categories = () => {
+    const {data, isLoading, error, mutate} = useSWR("/api/categories", fetcher);
 
-    const {data, isLoading, error} = useSWR("/api/categories", fetcher)
-    const navigation = useNavigation<CategoryNavigationType>()
+    const handleCreateCategory = async (name: string) => {
+        try {
+            let response = await axiosInstance.post("/api/categories", {name});
+            mutate();
+        } catch (err) {
+            console.error("Failed to create category:", err);
+        }
+    };
 
-
-    const navigateToCreateCategory = () => {
-        navigation.navigate("CreateCategory", {});
-    }
-
-    if(isLoading) {
-      return  <Loading />
+    if (isLoading) {
+        return <Loading/>;
     }
 
     const categories = Array.isArray(data?.data) ? data.data : [];
@@ -43,16 +44,10 @@ const Categories = () => {
                     )}
                     showsVerticalScrollIndicator={false}
                 />
-                <Pressable onPress={navigateToCreateCategory}>
-                    <Box p={"4"} backgroundColor={"lightGray"}>
-                        <Text variant={"textSm"} fontWeight={"600"} color={"gray650"}>
-                            Create new Category
-                        </Text>
-                    </Box>
-                </Pressable>
+                <CreateCategoryForm onSubmit={handleCreateCategory}/>
             </Box>
         </SafeAreaWrapper>
-    )
-}
+    );
+};
 
-export default Categories
+export default Categories;
