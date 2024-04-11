@@ -16,6 +16,14 @@ export const saveToken = async (key: string, value: string) => {
     }
 }
 
+export const removeToken = async (key: string) => {
+    try {
+        localStorage.removeItem(key);
+    } catch (error) {
+        console.error(error);
+    }
+}
+
 axiosInstance.interceptors.request.use(async (req) => {
     try {
         const token = localStorage.getItem("user_token");

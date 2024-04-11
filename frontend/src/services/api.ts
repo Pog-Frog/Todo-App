@@ -1,4 +1,4 @@
-import axiosInstance, {saveToken} from "./config";
+import axiosInstance, {removeToken, saveToken} from "./config";
 
 
 export const registerUser = async (user: User) => {
@@ -16,6 +16,15 @@ export const loginUser = async ({email, password}: { email: string, password: st
         const {token} = response.data;
         await saveToken("user_token", token);
         return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export const logoutUser = async () => {
+    try {
+        await axiosInstance.post("/api/logout");
+        await removeToken("user_token");
     } catch (error) {
         console.error(error);
     }

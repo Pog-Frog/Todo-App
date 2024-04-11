@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {Animated, Button, FlatList, Modal, Pressable, ScrollView, View} from 'react-native';
+import {Animated, Button, FlatList, Modal, Pressable, ScrollView, StyleSheet, View} from 'react-native';
 import SafeAreaWrapper from '../../components/shared/safe-area-wrapper';
 import useSWR from 'swr';
 import axiosInstance, {fetcher} from '../../services/config';
@@ -8,6 +8,9 @@ import CreateTaskForm from '../../components/tasks/create-new-task';
 import {Box, Text} from "../../utils/theme";
 import Icon from 'react-native-vector-icons/Feather';
 import EditTaskForm from '../../components/tasks/edit-task';
+import {logoutUser} from "../../services/api";
+import {AuthScreenNavigationType} from "../../navigation/types";
+import {useNavigation} from "@react-navigation/native";
 
 
 const Home = () => {
@@ -21,6 +24,7 @@ const Home = () => {
     const [taskTitle, setTaskTitle] = useState('');
     const [taskDescription, setTaskDescription] = useState('');
     const [taskId, setTaskId] = useState('');
+    const navigation = useNavigation<AuthScreenNavigationType<"SignIn">>()
 
     const handleCreateTask = async (task: { title: any; description: any; }) => {
         try {
@@ -92,6 +96,15 @@ const Home = () => {
         }
     };
 
+    const handleLogout = async () => {
+        try {
+            await logoutUser();
+            navigation.navigate("SignIn")
+        } catch (error) {
+            console.error('Failed to logout:', error);
+        }
+    };
+
     if (isCategoriesLoading || !tasksData) {
         return <Loading/>;
     }
@@ -102,9 +115,14 @@ const Home = () => {
     return (
         <SafeAreaWrapper>
             <Box flex={1} px={"4"} py={"10"}>
-                <Text variant={"textXl"} fontWeight={"700"} mb={"10"}>
-                    Home Screen
-                </Text>
+                <View style={styles.header}>
+                    <Text variant={"textXl"} fontWeight={"700"}>
+                        Home Screen
+                    </Text>
+                    {/*<Pressable onPress={handleLogout} style={styles.logoutButton}>*/}
+                    {/*    <Text style={styles.logoutText}>Logout</Text>*/}
+                    {/*</Pressable>*/}
+                </View>
                 <ScrollView>
                     <FlatList
                         data={categories}
@@ -207,5 +225,23 @@ const Home = () => {
         </SafeAreaWrapper>
     );
 };
+
+const styles = StyleSheet.create({
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    logoutButton: {
+        padding: 10,
+        borderRadius: 5,
+        backgroundColor: 'red',
+    },
+    logoutText: {
+        color: 'white',
+        fontSize: 16,
+    },
+});
 
 export default Home;
